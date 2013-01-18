@@ -21,7 +21,7 @@ container_profile = {
         "template": "debian",
         "template_opts": "",
         "puppet_class": "db-stage",
-        "install_puppet_script": "#!/bin/bash\ndhclient eth0\napt-get install --force-yes -y puppet",
+        "install_puppet_script": "#!/bin/bash\ndhclient eth0\napt-get update\napt-get install -y puppet",
         "lxc_config": [
             "lxc.network.type = veth",
             "lxc.network.link = br0",
@@ -33,7 +33,7 @@ container_profile = {
         "template": "debian",
         "template_opts": "",
         "puppet_class": "web-stage",
-        "install_puppet_script": "#!/bin/bash\ndhclient eth0\napt-get install --force-yes -y puppet",
+        "install_puppet_script": "#!/bin/bash\ndhclient eth0\napt-get update\napt-get install -y puppet",
         "lxc_config": [
             "lxc.network.type = veth",
             "lxc.network.link = br0",
