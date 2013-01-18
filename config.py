@@ -1,7 +1,9 @@
 settings = {
     "templates": "/homedir",
     "lxc-bindir": "/usr/sbin",
-    "destroy_after_running": True,
+    "lxc-rootdir": "/etc/lxc",
+    "puppet-classdir": "/home/bkero/code/vee/puppet-classes",
+    "destroy_after_running": False,
     "reboot_if_already_running": False,
     "continue_anyway": True,
     "debug": True,
@@ -18,13 +20,25 @@ container_profile = {
         "name": "db",
         "template": "debian",
         "template_opts": "",
-        "puppet-class": "db-stage",
+        "puppet_class": "db-stage",
+        "install_puppet_script": "#!/bin/bash\ndhclient eth0\napt-get install --force-yes -y puppet",
+        "lxc_config": [
+            "lxc.network.type = veth",
+            "lxc.network.link = br0",
+            "lxc.network.flags = up",
+        ],
     },
     "web": {
         "name": "web",
         "template": "debian",
         "template_opts": "",
-        "puppet-class": "web-stage",
+        "puppet_class": "web-stage",
+        "install_puppet_script": "#!/bin/bash\ndhclient eth0\napt-get install --force-yes -y puppet",
+        "lxc_config": [
+            "lxc.network.type = veth",
+            "lxc.network.link = br0",
+            "lxc.network.flags = up",
+        ],
     }
 }
 
