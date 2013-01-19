@@ -7,12 +7,11 @@ settings = {
     "reboot_if_already_running": False,
     "continue_anyway": True,
     "debug": True,
-}
-
-network = {
-    "type":        "bridge",
-    "bridge_name": "br0",
-    "as_root":     True,
+    "common_lxc_config": [
+        "lxc.network.type  = veth",
+        "lxc.network.link  = br0",
+        "lxc.network.flags = up",
+    ],
 }
 
 container_profile = {
@@ -22,11 +21,7 @@ container_profile = {
         "template_opts": "",
         "puppet_class": "db-stage",
         "install_puppet_script": "#!/bin/bash\ndhclient eth0\napt-get update\napt-get install -y puppet",
-        "lxc_config": [
-            "lxc.network.type = veth",
-            "lxc.network.link = br0",
-            "lxc.network.flags = up",
-        ],
+        "lxc_config": [],
     },
     "web": {
         "name": "web",
@@ -34,11 +29,7 @@ container_profile = {
         "template_opts": "",
         "puppet_class": "web-stage",
         "install_puppet_script": "#!/bin/bash\ndhclient eth0\napt-get update\napt-get install -y puppet",
-        "lxc_config": [
-            "lxc.network.type = veth",
-            "lxc.network.link = br0",
-            "lxc.network.flags = up",
-        ],
+        "lxc_config": [],
     }
 }
 
