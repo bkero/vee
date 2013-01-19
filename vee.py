@@ -28,8 +28,7 @@ def create(container):
         if config.settings['continue_anyway']:
             return()
         exit(1)
-    if container['profile']['lxc_config'] is not "":
-        apply_lxc(container)
+    apply_lxc(container)
     install_puppet(container)
     apply_puppet(container)
 
@@ -94,13 +93,21 @@ def destroy(container):
     p = Popen(shlex.split("%s/lxc-destroy -n %s" % (config.settings['lxc-bindir'], container['name'])), stdout=PIPE, stderr=PIPE, stdin=PIPE)
 
 def apply_lxc(container):
-    """Applies custom lxc config settings defined in profiles."""
+    """Applies custom lxc config settings defined globally and in profiles."""
     if config.settings['debug']:
         print("Container %s: Inserting lxc settings" % (container['name']))
+
     fh = open("%s/%s/config" % (config.settings['lxc-rootdir'], container['name']), "a+")
     fh.write("\n# Added for Vee\n\n")
+
+        # Write global lxc config
+    for line in config.settings['common_lxc_config']:
+        fh.write(line + "\n")
+
+        # Write profile lxc config
     for line in container['profile']['lxc_config']:
         fh.write(line + "\n")
+
     fh.close()
 
 def apply_puppet(container):
