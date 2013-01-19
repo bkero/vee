@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Vee - an LXC cluster automation tool """
 
 import os
 import stat
@@ -7,69 +8,79 @@ import config
 from subprocess import Popen, PIPE
 
 class ExistsError(Exception):
-    def __init__(self, message):
-        self.message = message
+    """Custom error that is raised if an LXC container already exists."""
+    pass
 
 def create(container):
     """Create a container"""
-    if config.settings['debug']:
+    if config.SETTINGS['debug']:
         print("Container %s: Creating" % (container['name']))
-    args = "%s/lxc-create" % (config.settings['lxc-bindir'])
+    args = "%s/lxc-create" % (config.SETTINGS['lxc-bindir'])
     args += " -n %s" % (container['name'])
     args += " -t %s" % (container['profile']['template'])
     args += " -- %s" % (container['profile']['template_opts'])
     try:
-        p = Popen(shlex.split(args), stdout=PIPE, stdin=PIPE, stderr=PIPE)
-        p.communicate()
-        if p.returncode is 1:
+        proc = Popen(shlex.split(args),
+                     stdout=PIPE, stdin=PIPE, stderr=PIPE)
+        proc.communicate()
+        if proc.returncode is 1:
             raise ExistsError("Container already exists")
-    except ExistsError as e:
-        print("Error creating container %s: %s" % (container['name'], e.message))
-        if config.settings['continue_anyway']:
+    except ExistsError as error:
+        print("Error creating container %s: %s" %
+              (container['name'], error))
+        if config.SETTINGS['continue_anyway']:
             return()
         exit(1)
-    apply_lxc(container)
+    install_lxc(container)
     install_puppet(container)
-    apply_puppet(container)
+    #apply_puppet(container)
 
 def start(container, command=False):
-    """Handle the starting up of a container, creating it if it doesn't already exist."""
-    # Create the container if it doesn't exist
-    if not exists(container):
-        create(container)
-    if config.settings['debug']:
-        print("Container %s: Starting" % (container['name']))
+    """Start a container"""
+    if config.SETTINGS['debug']:
+        print("Container %s: Starting" % (container['name']), end='')
+        if command is not False:
+            print(" with command: %s" % (command))
+        else:
+            print("")
 
-    args = "%s/lxc-start" % (config.settings['lxc-bindir'])
+    args = "%s/lxc-start" % (config.SETTINGS['lxc-bindir'])
     args += " -d " # Daemonize
     args += "-n %s " % (container['name'])
     if command:
         args += " -- %s" % (command)
-    print(args)
     try:
-        p = Popen(shlex.split(args), stdout=PIPE, stdin=PIPE, stderr=PIPE)
-        p.communicate()
+        proc = Popen(shlex.split(args), stdout=PIPE, stdin=PIPE, stderr=PIPE)
+        proc.communicate()
     except:
         print("Container %s: Error starting" % container['name'])
         exit(1)
 
+    ##proc.wait()
+    #if command is not False:
+        proc.wait()
+        #start(container)
+
 
 def exists(container):
     """Determine if a container is running"""
-        # Make a list of running containers
-    if config.settings['debug']:
-        print("Container %s: Determining existence: " % (container['name']), end='')
+        # Make a list of running CONTAINERS
+    if config.SETTINGS['debug']:
+        print("Container %s: Determining existence: " %
+             (container['name']), end='')
     try:
-        p = Popen("%s/lxc-ls" % (config.settings['lxc-bindir']), stdout=PIPE, stdin=PIPE, stderr=PIPE)
-        running_containers = str(p.communicate()[0])[2:-3].split("\\n") # Get rid of buffer API bytes
+        proc = Popen("%s/lxc-ls" % (config.SETTINGS['lxc-bindir']),
+                     stdout=PIPE, stdin=PIPE, stderr=PIPE)
+        # Get rid of buffer API bytes
+        running_containers = str(proc.communicate()[0])[2:-3].split("\\n")
     except:
         print("Error listing VMs")
         exit(1)
 
         # Check to see if any of the running container names match
-    for c in running_containers:
-        if c == container['name']:
-            if config.settings['debug']:
+    for possible_container in running_containers:
+        if possible_container == container['name']:
+            if config.SETTINGS['debug']:
                 print("Yes")
             return(True)
     print("No")
@@ -79,59 +90,102 @@ def shutdown(container, timeout=60):
     """Shut down a container. Optional timeout of 60 seconds."""
     try:
         # lxc.shutdown(container)
-        p = Popen(shlex.split("%s/lxc-shutdown -n %s -t %d" % (config.settings['lxc-bindir'], container['name'], timeout)), stdout=PIPE, stderr=PIPE, stdin=PIPE)
+        proc = Popen(shlex.split("%s/lxc-shutdown -n %s -t %d" %
+                   (config.SETTINGS['lxc-bindir'], container['name'], timeout)),
+                   stdout=PIPE, stderr=PIPE, stdin=PIPE)
         #print(p.communicate())
-        p.communicate()
+        proc.communicate()
     except:
-        print("Error shutting down container: %s, Reason: %s" % (container['name'], "Error"))
+        print("Error shutting down container: %s, Reason: %s" %
+             (container['name'], "Error"))
         exit(1)
 
 def destroy(container):
-    """Destroy a container. Note that a container should be shut down before destroying."""
-    if config.settings['debug']:
+    """Destroy a container. Note that a container should be
+       shut down before destroying."""
+    if config.SETTINGS['debug']:
         print("Container %s: Destroying" % (container['name']))
-    p = Popen(shlex.split("%s/lxc-destroy -n %s" % (config.settings['lxc-bindir'], container['name'])), stdout=PIPE, stderr=PIPE, stdin=PIPE)
+    proc = Popen(shlex.split("%s/lxc-destroy -n %s" %
+                (config.SETTINGS['lxc-bindir'], container['name'])),
+                 stdout=PIPE, stderr=PIPE, stdin=PIPE)
+    proc.communicate()
 
-def apply_lxc(container):
+def install_lxc(container):
     """Applies custom lxc config settings defined globally and in profiles."""
-    if config.settings['debug']:
+    if config.SETTINGS['debug']:
         print("Container %s: Inserting lxc settings" % (container['name']))
 
-    fh = open("%s/%s/config" % (config.settings['lxc-rootdir'], container['name']), "a+")
-    fh.write("\n# Added for Vee\n\n")
+    file = open("%s/%s/config" %
+             (config.SETTINGS['lxc-rootdir'], container['name']),
+              "a+")
+    file.write("\n# Added for Vee\n\n")
 
         # Write global lxc config
-    for line in config.settings['common_lxc_config']:
-        fh.write(line + "\n")
+    for line in config.SETTINGS['common_lxc_config']:
+        file.write(line + "\n")
 
         # Write profile lxc config
     for line in container['profile']['lxc_config']:
-        fh.write(line + "\n")
+        file.write(line + "\n")
 
-    fh.close()
+        # Write specific lxc config
+    for line in container['lxc_config']:
+        file.write(line + "\n")
+
+    file.close()
 
 def apply_puppet(container):
     """Apply a puppet class."""
-    if config.settings['debug']:
-        print("Container %s: Applying puppet class '%s'" % (container['name'], container['profile']['puppet_class']))
-    # TODO: Copy puppet class into container and lxc-execute -n $name puppet apply -e 'include $puppetclass'
+    if config.SETTINGS['debug']:
+        print("Container %s: Applying puppet class '%s'" %
+             (container['name'], container['profile']['puppet_class']))
+
+    # Create a file that will run puppet when the host starts
+    file = open("%s/%s/rootfs/%s" %
+               (config.SETTINGS['lxc-rootdir'], container['name'],
+                container['profile']['puppet_trigger_location']),
+                'w')
+    file.write("""#!/bin/bash
+                  puppet apply --modulepath=/tmp/puppet-modules/ \
+                      -e 'include %s'""" % (
+                          container['profile']['puppet_class']))
+    file.close()
 
 def install_puppet(container):
-    if config.settings['debug']:
-        print("Container %s: Installing puppet" % (container['name']))
-    fh = open("%s/%s/rootfs/tmp/install-puppet.sh" % (config.settings['lxc-rootdir'], container['name']),"w+")
-    os.chmod("%s/%s/rootfs/tmp/install-puppet.sh" % (config.settings['lxc-rootdir'], container['name']), stat.S_IXUSR)
-    fh.write(container['profile']['install_puppet_script'])
-    fh.close()
+    """Put a script in place to install puppet on first run."""
+    if config.SETTINGS['debug']:
+            print("Container %s: Applying puppet install script to: " %
+                 (container['name']), end="")
 
+        # Assemble filename and open file
+    filename = ("%s/%s/rootfs/tmp/install-puppet.sh" %
+               (config.SETTINGS['lxc-rootdir'], container['name']))
+
+    file = open(filename, "w")
+
+        # Print filename
+    if config.SETTINGS['debug']:
+        print(filename)
+
+        # Make this executable
+    os.chmod(filename, stat.S_IXUSR)
+
+    file.write(container['profile']['install_puppet_script'])
+    file.close()
+
+    # Now install the script to apply puppet class at boot
+    apply_puppet(container)
+
+    # Start the container just enough to run install script
     start(container, "/tmp/install-puppet.sh")
 
 if __name__ == "__main__":
-    for container in config.containers:
+    for container in config.CONTAINERS:
+        if not exists(container):
+            create(container)
         start(container)
-        apply_puppet(container)
 
-    if config.settings['destroy_after_running']:
-        for container in config.containers:
+    if config.SETTINGS['destroy_after_running']:
+        for container in config.CONTAINERS:
             shutdown(container)
             destroy(container)
