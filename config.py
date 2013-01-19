@@ -24,10 +24,8 @@ CONTAINER_PROFILE = {
         "template_opts": "",
         "puppet_class": "db-stage",
         "puppet_trigger_location": "/etc/rc.local",
-        "install_puppet_script": """#!/bin/bash
-                                    dhclient eth0
-                                    apt-get update
-                                    apt-get install --force-yes -y puppet""",
+        "install_puppet_script":
+            "apt-get install --force-yes -y puppet >> /tmp/log\n",
         "lxc_config": [],
     },
 
@@ -37,10 +35,8 @@ CONTAINER_PROFILE = {
         "template_opts": "",
         "puppet_class": "web-stage",
         "puppet_trigger_location": "/etc/rc.local",
-        "install_puppet_script": """#!/bin/bash
-                                    dhclient eth0
-                                    apt-get update
-                                    apt-get install --force-yes -y puppet""",
+        "install_puppet_script":
+            "apt-get install --force-yes -y puppet >> /tmp/log\n",
         "lxc_config": [],
     },
     
@@ -50,10 +46,8 @@ CONTAINER_PROFILE = {
         "template_opts": "",
         "puppet_class": "lb-stage",
         "puppet_trigger_location": "/etc/rc.local",
-        "install_puppet_script": """#!/bin/bash
-                                    dhclient eth0
-                                    apt-get update
-                                    apt-get install --force-yes -y puppet""",
+        "install_puppet_script":
+            "apt-get install --force-yes -y puppet >> /tmp/log\n",
         "lxc_config": [],
     },
 }

@@ -36,7 +36,8 @@ def create(container):
     #apply_puppet(container)
 
 def start(container, command=False):
-    """Start a container"""
+    """Start a container with an optional command.
+       If invoked with command, will shutdown afterwards."""
     if config.SETTINGS['debug']:
         print("Container %s: Starting" % (container['name']), end='')
         if command is not False:
@@ -55,12 +56,6 @@ def start(container, command=False):
     except:
         print("Container %s: Error starting" % container['name'])
         exit(1)
-
-    ##proc.wait()
-    #if command is not False:
-        proc.wait()
-        #start(container)
-
 
 def exists(container):
     """Determine if a container is running"""
@@ -144,7 +139,7 @@ def apply_puppet(container):
     file = open("%s/%s/rootfs/%s" %
                (config.SETTINGS['lxc-rootdir'], container['name'],
                 container['profile']['puppet_trigger_location']),
-                'w')
+                'a+')
     file.write("""#!/bin/bash
                   puppet apply --modulepath=/tmp/puppet-modules/ \
                       -e 'include %s'""" % (
@@ -154,12 +149,14 @@ def apply_puppet(container):
 def install_puppet(container):
     """Put a script in place to install puppet on first run."""
     if config.SETTINGS['debug']:
-            print("Container %s: Applying puppet install script to: " %
-                 (container['name']), end="")
+        print("Container %s: Applying puppet install script to: " %
+             (container['name']), end="")
 
         # Assemble filename and open file
-    filename = ("%s/%s/rootfs/tmp/install-puppet.sh" %
-               (config.SETTINGS['lxc-rootdir'], container['name']))
+    filename = ("%s/%s/rootfs%s" %
+               (config.SETTINGS['lxc-rootdir'],
+                container['name'],
+                container['profile']['puppet_trigger_location']))
 
     file = open(filename, "w")
 
@@ -177,7 +174,7 @@ def install_puppet(container):
     apply_puppet(container)
 
     # Start the container just enough to run install script
-    start(container, "/tmp/install-puppet.sh")
+    #start(container, "/tmp/install-puppet.sh")
 
 if __name__ == "__main__":
     for container in config.CONTAINERS:
