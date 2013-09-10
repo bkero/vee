@@ -205,8 +205,7 @@ if __name__ == "__main__":
 
     print("Running tests...")
     for test in config.TESTS:
-        if config.SETTINGS['debug']:
-            print("Executing test: %s... " % test, end='')
+        print("Executing test: %s... " % test, end='')
         proc = Popen("%s/%s" % (config.SETTINGS['vee_testdir'], test), stdout=PIPE, stdin=PIPE, stderr=PIPE)
         proc.communicate()
         if proc.returncode is 1:
