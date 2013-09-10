@@ -1,16 +1,19 @@
 """This is the configuration file. All modification to the
    application should happen here."""
 
+import os
+import sys
+
 SETTINGS = {
     "templates": "/homedir",
     "lxc_bindir": "/usr/bin",
     "lxc_rootdir": "/var/lib/lxc",
-    "vee_testdir": "/home/bkero/code/vee/tests",
-    "puppet_classdir": "/home/bkero/code/vee/puppet_classes",
+    "vee_testdir": os.path.dirname(sys.argv[0]) + "tests",
+    "puppet_classdir": os.path.dirname(sys.argv[0]) + "puppet_classes",
     "destroy_after_running": True,
     "reboot_if_already_running": False,
     "continue_anyway": True,
-    "debug": True,
+    "debug": False,
     "common_lxc_config": [],
 }
 
