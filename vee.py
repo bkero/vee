@@ -152,8 +152,8 @@ def apply_puppet(container):
     todir = "%s/%s/rootfs/opt/puppet_modules" % (config.SETTINGS['lxc_rootdir'], container['name'])
 
     if config.SETTINGS['debug']:
-        print("Copying from: %s" % fromdir)
-        print("Copying to  : %s" % todir)
+        print("Container %s: Copying from: %s" % (container['name'], fromdir))
+        print("Container %s: Copying to  : %s" % (container['name'], todir))
 
     dir_util.copy_tree(fromdir, todir)
 
