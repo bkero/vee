@@ -1,2 +1,6 @@
 * Figure out how to resolve hosts from outside containers
 * OR set up a special container for testing
+* Add puppetmaster support
+* Add parameterised class support
+* Replace logging with python logging module
+* Come up with a more elegant way of testing if a puppet catalog is done applying than looping an os.path.exists()
