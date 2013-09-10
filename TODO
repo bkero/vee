@@ -1,3 +1,6 @@
+* WRITE DOCUMENTATION
+* WRITE TESTS
+
 * Figure out how to resolve hosts from outside containers
 * OR set up a special container for testing
 * Add puppetmaster support
