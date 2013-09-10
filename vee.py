@@ -80,17 +80,16 @@ def exists(container):
             if config.SETTINGS['debug']:
                 print("Yes")
             return(True)
-    print("No")
+    if config.SETTINGS['debug']:
+        print("No")
     return(False)
 
 def shutdown(container, timeout=60):
     """Shut down a container. Optional timeout of 60 seconds."""
     try:
-        # lxc.shutdown(container)
         proc = Popen(shlex.split("%s/lxc-shutdown -n %s -t %d" %
                    (config.SETTINGS['lxc_bindir'], container['name'], timeout)),
                    stdout=PIPE, stderr=PIPE, stdin=PIPE)
-        #print(p.communicate())
         proc.communicate()
     except:
         print("Error shutting down container: %s, Reason: %s" %
@@ -186,21 +185,25 @@ def install_puppet(container):
     #start(container, "/tmp/install-puppet.sh")
 
 if __name__ == "__main__":
+    print("Creating Containers...")
     for container in config.CONTAINERS:
         if not exists(container):
             create(container)
         start(container)
 
     # This is a hack
+    print("Waiting for puppet catalogs to apply on containers...")
     containerlist = list(config.CONTAINERS)
     while len(containerlist) > 0:
         for container in containerlist:
-            print("Waiting for container %s..." % container['name'])
+            if config.SETTINGS['debug']:
+                print("Waiting for container %s..." % container['name'])
             if os.path.exists("%s/%s/rootfs/tmp/done" % (config.SETTINGS['lxc_rootdir'], container['name'])):
                 containerlist.remove(container)
             else:
                 time.sleep(1)
 
+    print("Running tests...")
     for test in config.TESTS:
         if config.SETTINGS['debug']:
             print("Executing test: %s... " % test, end='')
@@ -212,6 +215,7 @@ if __name__ == "__main__":
             print("OK!")
 
     if config.SETTINGS['destroy_after_running']:
+        print("Destroying containers...")
         for container in config.CONTAINERS:
             shutdown(container)
             destroy(container)
