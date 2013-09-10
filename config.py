@@ -3,26 +3,23 @@
 
 SETTINGS = {
     "templates": "/homedir",
-    "lxc-bindir": "/usr/sbin",
-    "lxc-rootdir": "/etc/lxc",
-    "puppet-classdir": "/home/bkero/code/vee/puppet-classes",
-    "destroy_after_running": False,
+    "lxc_bindir": "/usr/bin",
+    "lxc_rootdir": "/var/lib/lxc",
+    "vee_testdir": "/home/bkero/code/vee/tests",
+    "puppet_classdir": "/home/bkero/code/vee/puppet_classes",
+    "destroy_after_running": True,
     "reboot_if_already_running": False,
     "continue_anyway": True,
     "debug": True,
-    "common_lxc_config": [
-        "lxc.network.type  = veth",
-        "lxc.network.link  = br0",
-        "lxc.network.flags = up",
-    ],
+    "common_lxc_config": [],
 }
 
 CONTAINER_PROFILE = {
     "db": {  
         "name": "db",
-        "template": "debian",
+        "template": "ubuntu",
         "template_opts": "",
-        "puppet_class": "db-stage",
+        "puppet_class": "db",
         "puppet_trigger_location": "/etc/rc.local",
         "install_puppet_script":
             "apt-get install --force-yes -y puppet >> /tmp/log\n",
@@ -31,9 +28,9 @@ CONTAINER_PROFILE = {
 
     "web": {
         "name": "web",
-        "template": "debian",
+        "template": "ubuntu",
         "template_opts": "",
-        "puppet_class": "web-stage",
+        "puppet_class": "web",
         "puppet_trigger_location": "/etc/rc.local",
         "install_puppet_script":
             "apt-get install --force-yes -y puppet >> /tmp/log\n",
@@ -42,9 +39,9 @@ CONTAINER_PROFILE = {
     
     "lb": {
         "name": "lb",
-        "template": "debian",
+        "template": "ubuntu",
         "template_opts": "",
-        "puppet_class": "lb-stage",
+        "puppet_class": "lb",
         "puppet_trigger_location": "/etc/rc.local",
         "install_puppet_script":
             "apt-get install --force-yes -y puppet >> /tmp/log\n",
@@ -57,7 +54,7 @@ CONTAINERS = [
         "name": "db1",
         "profile": CONTAINER_PROFILE['db'],
         "lxc_config": [
-            "lxc.console = /var/log/lxc/db1",
+         "lxc.console = /var/log/lxc/db1",
         ],
     },
     {
@@ -95,5 +92,9 @@ CONTAINERS = [
             "lxc.console = /var/log/lxc/lb2",
         ],
     }
+]
 
+TESTS = [
+    'up.sh',
+    'good.sh',
 ]
